@@ -6,22 +6,11 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3001;
 
-// CORS configuration
-const FRONTEND_URLS = process.env.FRONTEND_URL.split(',').map((url) => url.trim());
-const SCORMIT_REGEX = /^https:\/\/.*scormit\.com$/;
-const AN802ADAM_REGEX = /^https:\/\/.*\.an802adam\.biz$/;
-const AN802ADAM_COM_WILDCARD_REGEX = /^https:\/\/.*\.an802adam\.com.*$/;
-
+// CORS configuration to allow all origins temporarily for testing
 const corsOptions = {
-  origin: function (origin, callback) {
-    if (FRONTEND_URLS.includes(origin) || SCORMIT_REGEX.test(origin) || AN802ADAM_REGEX.test(origin) || AN802ADAM_COM_WILDCARD_REGEX.test(origin)) {
-      callback(null, true); // Allow request if origin matches
-    } else {
-      callback(new Error('Not allowed by CORS')); // Block if not in allowed origins
-    }
-  },
+  origin: '*', // Allow all origins for testing
   methods: ['GET', 'POST', 'OPTIONS'],  // Allow necessary methods
   allowedHeaders: ['Content-Type', 'Authorization'],  // Allow required headers
   credentials: true,  // Allow credentials if needed
