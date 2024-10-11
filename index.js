@@ -1,8 +1,9 @@
-import fetch from 'node-fetch';  // Use import instead of require
-
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const fetch = require('node-fetch');
+
+
 
 dotenv.config();
 
@@ -36,8 +37,7 @@ app.post('/storyline', async (req, res) => {
   console.log(`Received userName: ${userName}`);
 
   try {
-    // Forward the userName to Make's webhook endpoint
-    const makeResponse = await fetch('https://hook.us1.make.com/zu8vdqypdis7rycejq4je0hxot5idltt, {
+    const makeResponse = await fetch('https://hook.us1.make.com/zu8vdqypdis7rycejq4je0hxot5idltt', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userName })
