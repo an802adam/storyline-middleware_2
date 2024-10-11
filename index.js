@@ -4,14 +4,17 @@ const cors = require('cors'); // Import the CORS package
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Use CORS middleware to enable cross-origin requests specifically for articulateusercontent.com
-app.use(cors({
-  origin: 'https://articulateusercontent.com',  // Allow requests from Articulate's content hosting
-  methods: ['GET', 'POST', 'OPTIONS'],  // Allow the necessary HTTP methods
-  allowedHeaders: ['Content-Type', 'Authorization'],  // Allow the required headers
-  preflightContinue: false,
-  optionsSuccessStatus: 204  // Handle successful preflight requests
-}));
+// Configure CORS to allow both articulate domains
+const corsOptions = {
+  origin: ['https://360.articulate.com', 'https://articulateusercontent.com'], // Allow both origins
+  methods: ['GET', 'POST', 'OPTIONS'],  // Allow necessary methods
+  allowedHeaders: ['Content-Type', 'Authorization'],  // Allow necessary headers
+  credentials: true,  // Allow credentials if needed
+  optionsSuccessStatus: 204  // Handle OPTIONS preflight request with status 204
+};
+
+// Use CORS with the above configuration
+app.use(cors(corsOptions));
 
 // Middleware to parse incoming JSON requests
 app.use(express.json());
@@ -26,6 +29,9 @@ app.post('/storyline', (req, res) => {
     res.json({ passcode: '12345' }); // Replace this with actual logic to get data from Make
   }, 2000); // Simulate a delay
 });
+
+// Handle preflight (OPTIONS) requests for all routes
+app.options('*', cors(corsOptions));  // Enable preflight for all routes
 
 // Start the server
 app.listen(port, () => {
