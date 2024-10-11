@@ -37,7 +37,7 @@ app.post('/storyline', async (req, res) => {
 
   try {
     // Forward the userName to Make's webhook endpoint
-    const makeResponse = await fetch('https://your-make-webhook-url', {
+    const makeResponse = await fetch('https://hook.us1.make.com/zu8vdqypdis7rycejq4je0hxot5idltt, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userName })
