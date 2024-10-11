@@ -1,8 +1,8 @@
 const express = require('express');
-const cors = require('cors'); // Import the CORS package
+const cors = require('cors');
 const dotenv = require('dotenv');
+const fetch = require('node-fetch');  // Add this to make HTTP requests
 
-// Load environment variables from the .env file
 dotenv.config();
 
 const app = express();
@@ -13,7 +13,6 @@ const allowedOrigins = ['https://360.articulate.com', 'https://articulateusercon
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests only from specific origins
     if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
       callback(null, true);
     } else {
@@ -22,28 +21,47 @@ const corsOptions = {
   },
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,  // Allow credentials if needed
-  optionsSuccessStatus: 204  // Handle OPTIONS preflight requests
+  credentials: true,
+  optionsSuccessStatus: 204
 };
 
-// Use CORS with the defined configuration
 app.use(cors(corsOptions));
-
-// Handle preflight requests (OPTIONS) for all routes
 app.options('*', cors(corsOptions));
-
-// Middleware to parse incoming JSON requests
-app.use(express.json());
+app.use(express.json());  // Parse incoming requests with JSON payloads
 
 // Route for handling Storyline requests
-app.post('/storyline', (req, res) => {
-  const userInput = req.body.userName;
-  console.log(`Received request from: ${userInput}`);
+app.post('/storyline', async (req, res) => {
+  const { userName } = req.body;  // Extract the userName from the request body
 
-  // Simulate sending the request to Make and waiting for response
-  setTimeout(() => {
-    res.json({ passcode: '12345' }); // Replace with actual logic
-  }, 2000);  // Simulate a delay for response
+  console.log(`Received userName: ${userName}`);
+
+  try {
+    // Forward the userName to Make's webhook endpoint
+    const makeResponse = await fetch('https://your-make-webhook-url', {  // Replace with your actual Make URL
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userName })
+    });
+
+    const makeData = await makeResponse.json();
+    
+    if (makeResponse.ok) {
+      // Make sent a successful response
+      const passcode = makeData.passcode;
+
+      // Return the passcode to Storyline
+      res.json({ passcode });
+      console.log(`Passcode returned to Storyline: ${passcode}`);
+    } else {
+      // Handle error if Make response was not OK
+      res.status(500).json({ error: 'Error retrieving passcode from Make' });
+      console.error('Error retrieving passcode from Make:', makeData);
+    }
+  } catch (error) {
+    // Handle fetch or other errors
+    res.status(500).json({ error: 'Error communicating with Make' });
+    console.error('Error communicating with Make:', error);
+  }
 });
 
 // Start the server
