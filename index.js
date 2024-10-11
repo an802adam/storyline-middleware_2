@@ -1,4 +1,4 @@
-import fetch from 'node-fetch'; // Use import instead of require
+import fetch from 'node-fetch';  // Use import instead of require
 
 const express = require('express');
 const cors = require('cors');
@@ -47,7 +47,6 @@ app.post('/storyline', async (req, res) => {
       body: JSON.stringify(rest) // Send all variables received from Storyline
     });
 
-    // Wait for Make to return the final response
     const contentType = makeResponse.headers.get('content-type');
     let makeData;
 
@@ -62,8 +61,17 @@ app.post('/storyline', async (req, res) => {
       throw new Error(`Make webhook error: ${makeResponse.statusText}`);
     }
 
+    // Ensure that the response is properly formatted as JSON and send it back
+    if (typeof makeData === 'string') {
+      try {
+        makeData = JSON.parse(makeData); // If the response is a string, try to parse it as JSON
+      } catch (e) {
+        console.log('Response was not valid JSON, returning text');
+      }
+    }
+
     // Send the final response from Make back to Storyline
-    res.json(makeData); // Whatever Make sends back, forward it directly to Storyline
+    res.json(makeData); // Whatever Make sends back, forward it directly to Storyline as a proper JSON response
     console.log(`Final data sent to Storyline: ${JSON.stringify(makeData)}`);
   } catch (error) {
     console.error('Error communicating with Make:', error);
