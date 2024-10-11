@@ -6,15 +6,24 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 3001;
+const port = process.env.PORT || 3000;
 
-// CORS configuration to allow all origins temporarily for testing
+// CORS configuration
+const allowedOrigins = ['https://360.articulate.com', 'https://articulateusercontent.com'];
+
 const corsOptions = {
-  origin: '*', // Allow all origins for testing
-  methods: ['GET', 'POST', 'OPTIONS'],  // Allow necessary methods
-  allowedHeaders: ['Content-Type', 'Authorization'],  // Allow required headers
+  origin: function (origin, callback) {
+    // Allow requests only from specific origins
+    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,  // Allow credentials if needed
-  optionsSuccessStatus: 204  // Handle OPTIONS preflight requests with status 204
+  optionsSuccessStatus: 204  // Handle OPTIONS preflight requests
 };
 
 // Use CORS with the defined configuration
