@@ -1,18 +1,25 @@
 const express = require('express');
 const cors = require('cors'); // Import the CORS package
+const dotenv = require('dotenv');
+
+// Load environment variables from the .env file
+dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-// CORS configuration to allow specific domains
-const allowedOrigins = ['https://360.articulate.com', 'https://articulateusercontent.com'];
+// CORS configuration
+const FRONTEND_URLS = process.env.FRONTEND_URL.split(',').map((url) => url.trim());
+const SCORMIT_REGEX = /^https:\/\/.*scormit\.com$/;
+const AN802ADAM_REGEX = /^https:\/\/.*\.an802adam\.biz$/;
+const AN802ADAM_COM_WILDCARD_REGEX = /^https:\/\/.*\.an802adam\.com.*$/;
 
 const corsOptions = {
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true); // Allow request if origin is in the allowed list or is undefined (e.g., for localhost)
+    if (FRONTEND_URLS.includes(origin) || SCORMIT_REGEX.test(origin) || AN802ADAM_REGEX.test(origin) || AN802ADAM_COM_WILDCARD_REGEX.test(origin)) {
+      callback(null, true); // Allow request if origin matches
     } else {
-      callback(new Error('Not allowed by CORS'));
+      callback(new Error('Not allowed by CORS')); // Block if not in allowed origins
     }
   },
   methods: ['GET', 'POST', 'OPTIONS'],  // Allow necessary methods
