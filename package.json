@@ -16,4 +16,8 @@
     "express": "^4.21.1",
     "node-fetch": "^3.3.2"
   }
+  {
+    "type": "module"
+  }
+  
 }

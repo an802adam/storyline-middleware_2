@@ -1,7 +1,8 @@
+import fetch from 'node-fetch';  // Use import instead of require
+
 const express = require('express');
-const cors = require('cors'); // Import the CORS package
+const cors = require('cors');
 const dotenv = require('dotenv');
-const fetch = require('node-fetch');
 
 dotenv.config();
 
@@ -13,7 +14,6 @@ const allowedOrigins = ['https://360.articulate.com', 'https://articulateusercon
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests only from specific origins
     if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
       callback(null, true);
     } else {
@@ -22,17 +22,12 @@ const corsOptions = {
   },
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,  // Allow credentials if needed
-  optionsSuccessStatus: 204  // Handle OPTIONS preflight requests
+  credentials: true,
+  optionsSuccessStatus: 204
 };
 
-// Use CORS with the defined configuration
 app.use(cors(corsOptions));
-
-// Handle preflight requests (OPTIONS) for all routes
 app.options('*', cors(corsOptions));
-
-// Middleware to parse incoming JSON requests
 app.use(express.json());
 
 // Route for handling Storyline requests
@@ -49,7 +44,7 @@ app.post('/storyline', async (req, res) => {
     });
 
     const makeData = await makeResponse.json();
-    
+
     if (makeResponse.ok) {
       const passcode = makeData.passcode;
       res.json({ passcode });
@@ -64,7 +59,6 @@ app.post('/storyline', async (req, res) => {
   }
 });
 
-// Start the server
 app.listen(port, () => {
   console.log(`Middleware server listening on port ${port}`);
 });
