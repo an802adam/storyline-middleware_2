@@ -1,9 +1,8 @@
+import fetch from 'node-fetch';  // Use import instead of require
+
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const fetch = require('node-fetch');
-
-
 
 dotenv.config();
 
@@ -33,29 +32,45 @@ app.use(express.json());
 
 // Route for handling Storyline requests
 app.post('/storyline', async (req, res) => {
-  const { userName } = req.body;
-  console.log(`Received userName: ${userName}`);
+  const { webhookId, userName, passcode } = req.body;
+  console.log(`Received webhookId: ${webhookId}, userName: ${userName}`);
 
   try {
-    const makeResponse = await fetch('https://hook.us1.make.com/zu8vdqypdis7rycejq4je0hxot5idltt', {
+    // Construct the full Make webhook URL
+    const makeWebhookUrl = `https://hook.us1.make.com/${webhookId}`;
+
+    // Forward the userName and passcode to Make's webhook
+    const makeResponse = await fetch(makeWebhookUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userName })
+      body: JSON.stringify({ userName, passcode })
     });
 
-    const makeData = await makeResponse.json();
+    const contentType = makeResponse.headers.get('content-type');
 
-    if (makeResponse.ok) {
-      const passcode = makeData.passcode;
-      res.json({ passcode });
-      console.log(`Passcode returned to Storyline: ${passcode}`);
+    // Check if the response is JSON or plain text
+    let makeData;
+    if (contentType && contentType.includes('application/json')) {
+      makeData = await makeResponse.json();
     } else {
-      res.status(500).json({ error: 'Error retrieving passcode from Make' });
-      console.error('Error retrieving passcode from Make:', makeData);
+      makeData = await makeResponse.text(); // Handle non-JSON response
+    }
+
+    if (!makeResponse.ok) {
+      throw new Error(`Make webhook error: ${makeResponse.statusText}`);
+    }
+
+    // If the response is JSON, process the passcode
+    if (typeof makeData === 'object' && makeData.passcode) {
+      res.json({ passcode: makeData.passcode });
+      console.log(`Passcode returned to Storyline: ${makeData.passcode}`);
+    } else {
+      res.json({ message: makeData });
+      console.log(`Non-JSON response from Make: ${makeData}`);
     }
   } catch (error) {
-    res.status(500).json({ error: 'Error communicating with Make' });
     console.error('Error communicating with Make:', error);
+    res.status(500).json({ error: 'Error communicating with Make' });
   }
 });
 
