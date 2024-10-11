@@ -1,4 +1,4 @@
-import fetch from 'node-fetch';  // Use import instead of require
+import fetch from 'node-fetch'; // Use import instead of require
 
 const express = require('express');
 const cors = require('cors');
@@ -32,26 +32,28 @@ app.use(express.json());
 
 // Route for handling Storyline requests
 app.post('/storyline', async (req, res) => {
-  const { webhookId, userName, passcode } = req.body;
-  console.log(`Received webhookId: ${webhookId}, userName: ${userName}`);
+  const { webhookId, ...rest } = req.body; // Extract webhookId and pass along any other variables
+
+  console.log(`Received webhookId: ${webhookId}, with data: ${JSON.stringify(rest)}`);
 
   try {
     // Construct the full Make webhook URL
     const makeWebhookUrl = `https://hook.us1.make.com/${webhookId}`;
 
-    // Forward the userName and passcode to Make's webhook
+    // Forward the data to Make's webhook
     const makeResponse = await fetch(makeWebhookUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userName, passcode })
+      body: JSON.stringify(rest) // Send all variables received from Storyline
     });
 
+    // Wait for Make to return the final response
     const contentType = makeResponse.headers.get('content-type');
+    let makeData;
 
     // Check if the response is JSON or plain text
-    let makeData;
     if (contentType && contentType.includes('application/json')) {
-      makeData = await makeResponse.json();
+      makeData = await makeResponse.json(); // Parse JSON response
     } else {
       makeData = await makeResponse.text(); // Handle non-JSON response
     }
@@ -60,14 +62,9 @@ app.post('/storyline', async (req, res) => {
       throw new Error(`Make webhook error: ${makeResponse.statusText}`);
     }
 
-    // If the response is JSON, process the passcode
-    if (typeof makeData === 'object' && makeData.passcode) {
-      res.json({ passcode: makeData.passcode });
-      console.log(`Passcode returned to Storyline: ${makeData.passcode}`);
-    } else {
-      res.json({ message: makeData });
-      console.log(`Non-JSON response from Make: ${makeData}`);
-    }
+    // Send the final response from Make back to Storyline
+    res.json(makeData); // Whatever Make sends back, forward it directly to Storyline
+    console.log(`Final data sent to Storyline: ${JSON.stringify(makeData)}`);
   } catch (error) {
     console.error('Error communicating with Make:', error);
     res.status(500).json({ error: 'Error communicating with Make' });
